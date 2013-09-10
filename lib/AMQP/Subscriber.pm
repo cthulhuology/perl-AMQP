@@ -7,7 +7,7 @@ use Sys::Hostname;
 has 'debug' => 1;
 has 'host' => 'localhost';
 has 'port' => 5672;
-has 'user' => 'guest';
+has 'username' => 'guest';
 has 'password' => 'guest';
 has 'vhost' => '/';
 has 'timeout' => 1;
@@ -25,10 +25,19 @@ has 'callback';
 
 sub amqp {
 	my ($self,$url) = @_;
-	$url =~ /(?:amqp:\/\/)*(?<hostname>[^:\/]+):(?<port>\d+)\/(?<vhost>[^\/]*)/;
-	$self->host($+{'host'} || 'localhost');
+	$url ||= '';			# incase we don't pass a url
+	$url =~ /amqp:\/\/
+		(?<username>[^:]+):
+		(?<password>[^@]+)@
+		(?<hostname>[^:\/]+):
+		(?<port>\d+)\/
+		(?<vhost>[^\/]*)
+	/x;
+	$self->host($+{'hostname'} || 'localhost');
 	$self->port($+{'port'} || 5672);
 	$self->vhost($+{'vhost'} || '/');
+	$self->username($+{'username'} || 'guest');
+	$self->password($+{'password'} || 'guest');
 	say "amqp://" . $self->host . ":" . $self->port . $self->vhost if $self->debug;
 }
 
@@ -41,7 +50,7 @@ sub attach {
 	$self->rabbit->connect(
 		host => $self->host,
 		port => $self->port,
-		user => $self->user,
+		username => $self->username,
 		pass => $self->password,
 		vhost => $self->vhost,
 		timeout => $self->timeout,
@@ -121,3 +130,71 @@ sub attach {
 		
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+AMQP::Subscriber -- Listens for messages on a queue and does stuff with them.
+
+=head1 SYNOPSIS
+  
+ use AMQP::Subscriber;
+ my $subscriber = AMQP::Subscriber->new;
+ $subscriber->amqp('amqp://foo:bar@localhost:5672/testing');
+ $subscriber->exchange('test');
+ $subscriber->type('topic');
+ $subscriber->queue('testing');
+ $subscriber->callback( sub {
+ 	my ($self,$message) = @_;
+	say $message;
+ });
+ $subscriber->attach;
+
+=head1 DESCRIPTION
+
+The AMQP::Subscriber wraps 
+
+=head1 METHODS
+
+
+B<new( \%params )> (constructor)
+
+Create a new instance of this class. Initialize the object with
+whatever is in C<\%params>, which are not predefined.</p>
+
+Returns: new instance of this class.
+
+B<amqp($url)>
+
+Configures all of the connection settings based on an AMQP url.  The format of which is:
+  
+ amqp://username:password@host:port/vhost
+
+All of the elements of the url are required if you are not using the defaults.  The default settings are:
+
+ amqp://guest:guest@localhost:5672/
+
+B<attach()>
+ 
+
+=head1 TODO
+
+
+=head1 BUGS
+
+If you find them out
+
+=head1 COPYRIGHT
+
+Same as Perl.
+
+=head1 AUTHORS
+
+Dave Goehrig <dave@dloh.org>
+
+=cut
+
+=head1 
