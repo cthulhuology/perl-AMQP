@@ -19,14 +19,23 @@ has 'rabbit';
 has 'connection';
 has 'channel';
 has 'status';
-has 'on_message';
+has 'on_connect';
 
 sub amqp {
 	my ($self,$url) = @_;
-	$url =~ /(?:amqp:\/\/)*(?<hostname>[^:\/]+):(?<port>\d+)\/(?<vhost>[^\/]*)/;
-	$self->host($+{'host'} || 'localhost');
+	$url ||= '';			# incase we don't pass a url
+	$url =~ /amqp:\/\/
+		(?<username>[^:]+):
+		(?<password>[^@]+)@
+		(?<hostname>[^:\/]+):
+		(?<port>\d+)\/
+		(?<vhost>[^\/]*)
+	/x;
+	$self->host($+{'hostname'} || 'localhost');
 	$self->port($+{'port'} || 5672);
 	$self->vhost($+{'vhost'} || '/');
+	$self->username($+{'username'} || 'guest');
+	$self->password($+{'password'} || 'guest');
 	say "amqp://" . $self->host . ":" . $self->port . $self->vhost if $self->debug;
 }
 
@@ -55,7 +64,7 @@ sub attach {
 				on_success => sub {
 					say "Opened channel" if $self->debug;
 					$self->channel(shift);
-					$self->callback->($self);
+					$self->on_connect->($self);
 				},
 			);
 		},
@@ -76,4 +85,73 @@ sub attach {
 	$self->status->recv;
 }
 
+sub send {
+	my ($self,$message) = @_;
+	$self->channel->send($message);
+}
+
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+AMQP::Publisher -- Publishes messages to an exchange.
+
+=head1 SYNOPSIS
+  
+ use AMQP::Publisher;
+ my $publisher = AMQP::Publisher->new;
+ $publisher->amqp('amqp://foo:bar@localhost:5672/testing');
+ $publisher->exchange('test');
+ $publisher->type('topic');
+ $publisher->queue('testing');
+ $publisher->on_connect( sub {
+ 	my ($self) = @_;
+	$self->channel->send('hello world');
+ });
+ $publisher->attach;
+
+=head1 DESCRIPTION
+
+The AMQP::Publisher publishes messages to an AMQP exchange
+
+=head1 METHODS
+
+B<new()> (constructor)
+
+Creates a new AMQP::Producer which can 
+
+Returns: new instance of this class.
+
+B<amqp($url)>
+
+Configures all of the connection settings based on an AMQP url.  The format of which is:
+  
+ amqp://username:password@host:port/vhost
+
+All of the elements of the url are required if you are not using the defaults.  The default settings are:
+
+ amqp://guest:guest@localhost:5672/
+
+B<attach()>
+ 
+
+=head1 TODO
+
+
+=head1 BUGS
+
+If you find them out
+
+=head1 COPYRIGHT
+
+Same as Perl.
+
+=head1 AUTHORS
+
+Dave Goehrig <dave@dloh.org>
+
+=cut

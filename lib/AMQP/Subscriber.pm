@@ -21,7 +21,7 @@ has 'connection';
 has 'channel';
 has 'status';
 has 'tag' => $ENV{LOGNAME} . "@" . hostname;
-has 'callback';
+has 'on_message';
 
 sub amqp {
 	my ($self,$url) = @_;
@@ -94,7 +94,7 @@ sub attach {
 												},
 												on_consume => sub {
 													my $msg = shift;
-													$self->callback->($self,$msg);
+													$self->on_message->($self,$msg);
 												},
 												on_cancel => sub {
 													say "Consumption canceled" if $self->debug;
@@ -196,5 +196,3 @@ Same as Perl.
 Dave Goehrig <dave@dloh.org>
 
 =cut
-
-=head1 
