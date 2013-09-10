@@ -137,7 +137,23 @@ All of the elements of the url are required if you are not using the defaults.  
  amqp://guest:guest@localhost:5672/
 
 B<attach()>
+
+Connects to the AMQP server specified by the C<amqp()> method.  When the server connects it will invoke the publisher's C<on_connect()>
+callback.  This can enable you to setup additional event loops to drive the publisher.
+
+
+B<send()>
+
+After the Publisher object has attached to the AMQP server, it is capable of sending messages to the configured exchange and key.
+
+
+B<exchange( $exchange )>
+
+An accessor to the configured exchange.  
+
+B<key( $key )>
  
+And accessor to the configured routing key.
 
 =head1 TODO
 
