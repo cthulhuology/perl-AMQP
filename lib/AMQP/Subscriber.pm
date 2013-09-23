@@ -1,6 +1,7 @@
 package AMQP::Subscriber;
+our $VERSION = '0.01';
 
-use Mojo::Base -base;
+use Mojo::Base 'AMQP';
 use AnyEvent::RabbitMQ;
 use Sys::Hostname;
 
@@ -22,24 +23,6 @@ has 'channel';
 has 'status';
 has 'tag' => $ENV{LOGNAME} . "@" . hostname;
 has 'on_message';
-
-sub amqp {
-	my ($self,$url) = @_;
-	$url ||= '';			# incase we don't pass a url
-	$url =~ /amqp:\/\/
-		(?<username>[^:]+):
-		(?<password>[^@]+)@
-		(?<hostname>[^:\/]+):
-		(?<port>\d+)\/
-		(?<vhost>[^\/]*)
-	/x;
-	$self->host($+{'hostname'} || 'localhost');
-	$self->port($+{'port'} || 5672);
-	$self->vhost($+{'vhost'} || '/');
-	$self->username($+{'username'} || 'guest');
-	$self->password($+{'password'} || 'guest');
-	say "amqp://" . $self->host . ":" . $self->port . $self->vhost if $self->debug;
-}
 
 sub attach {
 	my $self = shift;
@@ -143,7 +126,7 @@ AMQP::Subscriber -- Listens for messages on a queue and does stuff with them.
   
  use AMQP::Subscriber;
  my $subscriber = AMQP::Subscriber->new;
- $subscriber->amqp('amqp://foo:bar@localhost:5672/testing');
+ $subscriber->server('amqp://foo:bar@localhost:5672/testing');
  $subscriber->exchange('test');
  $subscriber->type('topic');
  $subscriber->queue('testing');
@@ -167,7 +150,7 @@ whatever is in C<\%params>, which are not predefined.</p>
 
 Returns: new instance of this class.
 
-B<amqp($url)>
+B<server($url)>
 
 Configures all of the connection settings based on an AMQP url.  The format of which is:
   

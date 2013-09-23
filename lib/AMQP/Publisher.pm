@@ -1,6 +1,7 @@
 package AMQP::Publisher;
+our $VERSION = '0.01';
 
-use Mojo::Base -base;
+use Mojo::Base 'AMQP';
 use AnyEvent::RabbitMQ;
 use Sys::Hostname;
 
@@ -20,24 +21,6 @@ has 'connection';
 has 'channel';
 has 'status';
 has 'on_connect';
-
-sub amqp {
-	my ($self,$url) = @_;
-	$url ||= '';			# incase we don't pass a url
-	$url =~ /amqp:\/\/
-		(?<username>[^:]+):
-		(?<password>[^@]+)@
-		(?<hostname>[^:\/]+):
-		(?<port>\d+)\/
-		(?<vhost>[^\/]*)
-	/x;
-	$self->host($+{'hostname'} || 'localhost');
-	$self->port($+{'port'} || 5672);
-	$self->vhost($+{'vhost'} || '/');
-	$self->username($+{'username'} || 'guest');
-	$self->password($+{'password'} || 'guest');
-	say "amqp://" . $self->host . ":" . $self->port . $self->vhost if $self->debug;
-}
 
 sub attach {
 	my $self = shift;
@@ -104,7 +87,7 @@ AMQP::Publisher -- Publishes messages to an exchange.
   
  use AMQP::Publisher;
  my $publisher = AMQP::Publisher->new;
- $publisher->amqp('amqp://foo:bar@localhost:5672/testing');
+ $publisher->server('amqp://foo:bar@localhost:5672/testing');
  $publisher->exchange('test');
  $publisher->type('topic');
  $publisher->queue('testing');
@@ -126,7 +109,7 @@ Creates a new AMQP::Producer which can
 
 Returns: new instance of this class.
 
-B<amqp($url)>
+B<server($url)>
 
 Configures all of the connection settings based on an AMQP url.  The format of which is:
   
@@ -138,7 +121,7 @@ All of the elements of the url are required if you are not using the defaults.  
 
 B<attach()>
 
-Connects to the AMQP server specified by the C<amqp()> method.  When the server connects it will invoke the publisher's C<on_connect()>
+Connects to the AMQP server specified by the C<server()> method.  When the server connects it will invoke the publisher's C<on_connect()>
 callback.  This can enable you to setup additional event loops to drive the publisher.
 
 
