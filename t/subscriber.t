@@ -9,7 +9,7 @@ my $s = AMQP::Subscriber->new;
 isa_ok($s,'AMQP::Subscriber');
 
 # Test overriding the defaults
-$s->amqp('amqp://foo:bar@test:25672/test');
+$s->server('amqp://foo:bar@test:25672/test');
 is($s->host, 'test', 'host set');
 is($s->port, 25672, 'port set');
 is($s->vhost, 'test', 'vhost set');
@@ -17,7 +17,7 @@ is($s->username, 'foo', 'user set');
 is($s->password, 'bar', 'password set');
 
 # Test the defaults
-$s->amqp();
+$s->server();
 is($s->host, 'localhost', 'localhost default');
 is($s->port, 5672, 'port default');
 is($s->vhost, '/', 'vhost default');
